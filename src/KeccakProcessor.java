@@ -1,3 +1,11 @@
+/**
+ * This class provides methods for performing the various permutation and transformation steps
+ * used in the Keccak algorithm.
+ *
+ * This implementation was inspired by:
+ * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
+ * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
+ */
 public class KeccakProcessor {
     // Constants for Keccak permutation
     private static final long[] keccakfRndc = {
@@ -104,8 +112,8 @@ public class KeccakProcessor {
         long[] stateOut = new long[25];
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
-                long tmp = ~stateIn[(i+1) % 5 + 5*j] & stateIn[(i+2) % 5 + 5*j];
-                stateOut[i + 5*j] = stateIn[i + 5*j] ^ tmp;
+                long tmp = ~stateIn[(i + 1) % 5 + 5 * j] & stateIn[(i + 2) % 5 + 5 * j];
+                stateOut[i + 5 * j] = stateIn[i + 5 * j] ^ tmp;
             }
         }
         return stateOut;
@@ -148,7 +156,7 @@ public class KeccakProcessor {
      * @return Rotated 64-bit lane
      */
     private static long rotateLane64(long x, int y) {
-        return (x << (y%64)) | (x >>> (64 - (y%64)));
+        return (x << (y % 64)) | (x >>> (64 - (y % 64)));
     }
 
     /**

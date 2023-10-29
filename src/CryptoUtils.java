@@ -1,22 +1,32 @@
 import java.math.BigInteger;
 import java.util.Arrays;
 
+/**
+ * A utility class that provides cryptographic operations including hashing,
+ * padding, and encoding.
+ * This class is based on the Keccak cryptographic hash function.
+ *
+ * This implementation was inspired by:
+ * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
+ * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
+ */
 public class CryptoUtils {
     /**
      * The SHAKE256 function.
      * Produces a variable length message digest based on the keccak-f permutations.
-     * This implementation was inspired by:
-     * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
-     * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
      *
      * @param in The input byte array
      * @param bitLen The desired bit length of the output
      * @return A byte array representing the message digest
      */
     public static byte[] SHAKE256(byte[] in, int bitLen) {
+        // Copy the input byte array to create a new array.
         byte[] uin = Arrays.copyOf(in, in.length + 1);
-        int bytesToPad = 136 - in.length % (136); // rate is 136 bytes
-        uin[in.length] = bytesToPad == 1 ? (byte) 0x9f : 0x1f; // pad with suffix defined in FIPS 202 sec. 6.2
+        // The rate is fixed at 136 bytes, calculate the number of bytes to pad.
+        int bytesToPad = 136 - in.length % (136);
+        // Perform padding and add the padding suffix.
+        uin[in.length] = bytesToPad == 1 ? (byte) 0x9f : 0x1f;
+        // Calculate the SHAKE256 hash using the sponge construction and return it.
         return sponge(uin, bitLen, 512);
     }
 
@@ -31,12 +41,18 @@ public class CryptoUtils {
      * @return A byte array representing the message digest
      */
     public static byte[] cSHAKE256(byte[] in, int bitLength, byte[] functionName, byte[] customStr) {
-        if (functionName.length == 0 && customStr.length == 0) return SHAKE256(in, bitLength);
+        // If both function name and custom string are empty, fallback to SHAKE 256
+        if (functionName.length == 0 && customStr.length == 0) {
+            return SHAKE256(in, bitLength);
+        }
 
+        // Concatenate the encoded functionName and customStr
         byte[] fin = concat(encodeString(functionName), encodeString(customStr));
+        // Pad the concatenated data to a multiple of 136 bytes (the rate of cSHAKE256)
         fin = concat(bytePad(fin, 136), in);
+        // Append a 0x04 byte (byte indicating cSHAKE) to the final data
         fin = concat(fin, new byte[] {0x04});
-
+        // Calculate the cSHAKE256 hash using the sponge construction and return it
         return sponge(fin, bitLength, 512);
     }
 
@@ -45,70 +61,73 @@ public class CryptoUtils {
      * Produces a plain cryptographic hash text.
      *
      * @param key The key as byte array
-     * @param in The input byte array
-     * @param bitLength The desired bit length of the output
-     * @param customString A custom string as byte array
+     * @param message The input byte array
+     * @param outputBitLength The desired bit length of the output
+     * @param customization A custom string as byte array
      * @return A byte array representing the hash text
      */
-    public static byte[] KMACXOF256(byte[] key, byte[] in, int bitLength, byte[] customString) {
-
-        byte[] newX = concat(concat(bytePad(encodeString(key),136), in), rightEncode(BigInteger.ZERO));
-        return cSHAKE256(newX, bitLength, "KMAC".getBytes(), customString);
+    public static byte[] KMACXOF256(byte[] key, byte[] message, int outputBitLength, byte[] customization) {
+        // Concatenate the key with the input data, padding the key to 136 bytes
+        byte[] paddedKey = concat(concat(bytePad(encodeString(key),136), message), rightEncode(BigInteger.ZERO));
+        // Use the cSHAKE256 function with the specified custom string and "KMAC" as the function name
+        return cSHAKE256(paddedKey, outputBitLength, "KMAC".getBytes(), customization);
     }
     /**
      * A function to perform right encoding of bits.
      * Encodes the bits of BigInteger X onto the right side of the byte array.
      *
-     * @param x The BigInteger to be encoded
+     * @param num The BigInteger to be encoded
      * @return A byte array with the encoded BigInteger
      */
-    private static byte[] rightEncode(BigInteger x) {
-        //establishing the validity of x whi should be 0 <= x < 2^2040
-        assert 0 < x.compareTo(new BigInteger(String.valueOf(Math.pow(2, 2040))));
-
-        int n = 1;
-
-        while (x.compareTo(new BigInteger(String.valueOf((int)Math.pow(2, (8*n))))) != -1) {
-            n++;
+    private static byte[] rightEncode(BigInteger num) {
+        if (num.compareTo(BigInteger.valueOf(2).pow(2040)) >= 0) {
+            throw new IllegalArgumentException("x should be less than 2^2040");
         }
 
-        byte[] xBytes = x.toByteArray();
+        int byteCount = 1;
+
+        while (num.compareTo(new BigInteger(String.valueOf((int)Math.pow(2, (8 * byteCount))))) != -1) {
+            byteCount++;
+        }
+
+        byte[] numberBytes = num.toByteArray();
 
         // handle exception where first byte is zero
-        if ((xBytes[0] == 0) && (xBytes.length > 1)) {
-            byte[] temp = new byte[xBytes.length - 1];
-            System.arraycopy(xBytes, 1, temp, 0, xBytes.length - 1);
-            xBytes = temp;
+        if ((numberBytes[0] == 0) && (numberBytes.length > 1)) {
+            byte[] temp = new byte[numberBytes.length - 1];
+            System.arraycopy(numberBytes, 1, temp, 0, numberBytes.length - 1);
+            numberBytes = temp;
         }
 
-        byte[] output = new byte[xBytes.length + 1];
+        byte[] output = new byte[numberBytes.length + 1];
 
-        for (int i = 0; i < xBytes.length; i++) {
-            output[xBytes.length - (i+1)] = xBytes[i];
+        for (int i = 0; i < numberBytes.length; i++) {
+            output[numberBytes.length - (i+1)] = numberBytes[i];
         }
 
-        output[0] =(byte)n;
+        output[0] =(byte)byteCount;
         return output;
     }
 
     /**
      * Encodes the given BigInteger onto the left side of the byte array.
      *
-     * @param x The BigInteger to be encoded
+     * @param num The BigInteger to be encoded
      * @return A byte array with the left-encoded BigInteger
      */
-    private static byte[] leftEncode(BigInteger x) {
-        //Establishing the Validity of X which should be 0 <= x < 2^2040
-        assert 0 < x.compareTo(new BigInteger(String.valueOf(Math.pow(2, 2040))));
+    private static byte[] leftEncode(BigInteger num) {
+        if (num.compareTo(BigInteger.valueOf(2).pow(2040)) >= 0) {
+            throw new IllegalArgumentException("x should be less than 2^2040");
+        }
 
         int n = 1;
 
-        while (x.compareTo(new BigInteger(String.valueOf((int)Math.pow(2, (8*n))))) != -1) {
+        while (num.compareTo(new BigInteger(String.valueOf((int)Math.pow(2, (8*n))))) != -1) {
             n++;
         }
 
         // representation of x in a bytearray
-        byte[] xBytes = x.toByteArray();
+        byte[] xBytes = num.toByteArray();
 
         if ((xBytes[0] == 0) && (xBytes.length > 1)) {
             byte[] temp = new byte[xBytes.length - 1];
@@ -118,7 +137,6 @@ public class CryptoUtils {
 
         byte[] output = new byte[xBytes.length + 1];
         for (int i = 0; i < xBytes.length; i++) {
-            //xBytes[i] = reverseBitsByte(xBytes[i]);
             output[xBytes.length - (i)] = xBytes[i];
         }
 
@@ -261,21 +279,14 @@ public class CryptoUtils {
      * @param b Byte array to be converted
      * @return Hexadecimal string representation of the byte array
      */
-    public static String bytesToHexString(byte[] b)  {
-        int space = 0;
-
+    public static String bytesToHexString(byte[] b) {
         StringBuilder hex = new StringBuilder();
         for (int i = 0; i < b.length; i++) {
-            if(space == 1) {
-                hex.append(" ");
-                space = 0;
-            }
-
             hex.append(String.format("%02X", b[i]));
-            space++;
         }
         return hex.toString();
     }
+
     /**
      * Converts the provided hexadecimal string into a byte array.
      *
