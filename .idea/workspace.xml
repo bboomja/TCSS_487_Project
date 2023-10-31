@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3334c70f-3c0e-451b-94b7-62210fd05f3b" name="Changes" comment="modified KeccakProcessor.java">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Hello.txt.encrypted" beforeDir="false" afterPath="$PROJECT_DIR$/Hello.txt.encrypted" afterDir="false" />
+    <list default="true" id="3334c70f-3c0e-451b-94b7-62210fd05f3b" name="Changes" comment="modified KeccakProcessor.java and CryptoUtils.java">
       <change beforePath="$PROJECT_DIR$/src/CryptoUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/CryptoUtils.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -190,7 +188,15 @@
       <option name="project" value="LOCAL" />
       <updated>1698770806459</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="modified KeccakProcessor.java and CryptoUtils.java">
+      <option name="closed" value="true" />
+      <created>1698774002557</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1698774002557</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -199,6 +205,7 @@
     <MESSAGE value="modified classes" />
     <MESSAGE value="add new comments" />
     <MESSAGE value="modified KeccakProcessor.java" />
-    <option name="LAST_COMMIT_MESSAGE" value="modified KeccakProcessor.java" />
+    <MESSAGE value="modified KeccakProcessor.java and CryptoUtils.java" />
+    <option name="LAST_COMMIT_MESSAGE" value="modified KeccakProcessor.java and CryptoUtils.java" />
   </component>
 </project>

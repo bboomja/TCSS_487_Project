@@ -184,7 +184,7 @@ public class CryptoUtils {
         // Calculate the length of the resulting byte array result
         byte[] result = new byte[value * ((encoded.length + arr.length + value - 1) / value)];
 
-        // Concatenate encdoed and arr into result
+        // Concatenate encoded and arr into result
         System.arraycopy(encoded, 0, result, 0, encoded.length);
         System.arraycopy(arr,0,result,encoded.length, arr.length);
 
@@ -204,12 +204,12 @@ public class CryptoUtils {
      * @param cap The capacity in bits which remains untouched by the sponge function
      * @return Output bytes after applying the sponge function
      */
-    private static byte[] sponge(byte[] in, int bitLen, int cap) {
-        int rate = 1600 - cap;
+    private static byte[] sponge(byte[] in, int bitLen, int capacity) {
+        int rate = 1600 - capacity;
         // Pad the input to a multiple of the rate if needed.
         byte[] padded = in.length % (rate / 8) == 0 ? in : padTenOne(rate, in);
         // Convert the padded byte array into a 2D array of states.
-        long[][] states = byteArrayToStates(padded, cap);
+        long[][] states = byteArrayToStates(padded, capacity);
         // Initialize the state to be used for Keccak processing.
         long[] stcml = new long[25];
         // Process each state in the sponge construction.
