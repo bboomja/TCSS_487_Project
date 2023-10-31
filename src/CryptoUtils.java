@@ -5,7 +5,6 @@ import java.util.Arrays;
  * A utility class that provides cryptographic operations including hashing,
  * padding, and encoding.
  * This class is based on the Keccak cryptographic hash function.
- *
  * This implementation was inspired by:
  * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
  * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
@@ -176,7 +175,9 @@ public class CryptoUtils {
      */
     private static byte[] bytePad(byte[] arr, int value) {
         // SecondArray must be greater than 0
-        assert value > 0;
+        if (value <= 0) {
+            throw new IllegalArgumentException("Value must be greater than 0");
+        }
 
         // Convert value to BigInteger and encode it into a byte array
         byte[] encoded = leftEncode(BigInteger.valueOf(value));

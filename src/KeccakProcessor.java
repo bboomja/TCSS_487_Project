@@ -1,7 +1,6 @@
 /**
  * This class provides methods for performing the various permutation and transformation steps
  * used in the Keccak algorithm.
- *
  * This implementation was inspired by:
  * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
  * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
