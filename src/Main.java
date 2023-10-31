@@ -17,24 +17,24 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            printOptions();
+            printOptions(); // Display the menu options.
             int option = scanner.nextInt();
 
             switch (option) {
                 case 1:
-                    handleHashingOption(scanner);
+                    handleHashingOption(scanner); // Call a method to handle option 1.
                     break;
 
                 case 2:
-                    handleAuthenticationOption(scanner);
+                    handleAuthenticationOption(scanner); // Call a method to handle option 2.
                     break;
 
                 case 3:
-                    handleEncryptionOption(scanner);
+                    handleEncryptionOption(scanner); // Call a method to handle option 3.
                     break;
 
                 case 4:
-                    handleDecryptionOption(scanner);
+                    handleDecryptionOption(scanner); // Call a method to handle option 4.
                     break;
 
                 default:
@@ -75,7 +75,7 @@ public class Main {
         System.out.println("2. Compute a plain cryptographic hash of text input");
 
         int subOption = scanner.nextInt();
-        scanner.nextLine();
+        scanner.nextLine(); // Consume the newline character after reading the integer.
         byte[] inputBytes;
         byte[] hashBytes;
 
@@ -83,7 +83,7 @@ public class Main {
             case 1:
                 System.out.println("Enter the file path:");
                 String filePath = scanner.nextLine();
-                inputBytes = readFileToByteArray(filePath);
+                inputBytes = readFileToByteArray(filePath); // Read the file content into a byte array.
                 hashBytes = CryptoUtils.KMACXOF256("".getBytes(), inputBytes, 512, "D".getBytes());
                 System.out.println("Hash of the file: " + CryptoUtils.bytesToHexString(hashBytes));
                 break;
@@ -91,7 +91,7 @@ public class Main {
             case 2:
                 System.out.println("Enter the text:");
                 String inputText = scanner.nextLine();
-                inputBytes = inputText.getBytes();
+                inputBytes = inputText.getBytes(); // Convert the text to bytes.
                 hashBytes = CryptoUtils.KMACXOF256("".getBytes(), inputBytes, 512, "D".getBytes());
                 System.out.println("Hash of the text: " + CryptoUtils.bytesToHexString(hashBytes));
                 break;

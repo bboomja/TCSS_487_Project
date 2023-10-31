@@ -31,7 +31,6 @@ public class KeccakProcessor {
 
     /**
      * Method for the Keccak permutation.
-     * Adapted from:
      * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
      *
      * @param stateIn The input state
@@ -50,7 +49,6 @@ public class KeccakProcessor {
 
     /**
      * Performs the theta step of the Keccak algorithm.
-     * Adapted from:
      * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
      * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
      *
@@ -78,7 +76,6 @@ public class KeccakProcessor {
 
     /**
      * Performs the rho and phi steps of the Keccak algorithm.
-     * Adapted from:
      * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
      * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
      *
@@ -101,7 +98,6 @@ public class KeccakProcessor {
 
     /**
      * Performs the chi steps of the Keccak algorithm.
-     * Adapted from:
      * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
      * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
      *
@@ -121,7 +117,6 @@ public class KeccakProcessor {
 
     /**
      * Applies the round constatnt to the first word of the state.
-     * Adapted from:
      * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
      *
      * @param stateIn Input state array of size 25
@@ -141,12 +136,19 @@ public class KeccakProcessor {
      * @return Resultant state after XOR
      */
     public static long[] xorStates(long[] stateArray1, long[] stateArray2) {
+        // Create a new array to store the result of the XOR operation.
         long[] out = new long[25];
+
+        // Iterate through the elements of the input arrays.
         for (int i = 0; i < stateArray1.length; i++) {
+            // Perform a bitwise XOR operation between corresponding elements of the two arrays.
             out[i] = stateArray1[i] ^ stateArray2[i];
         }
+
+        // Return the resulting array containing the XORed values.
         return out;
     }
+
 
     /**
      * Rotates the provided 64-bit lane.
@@ -156,8 +158,14 @@ public class KeccakProcessor {
      * @return Rotated 64-bit lane
      */
     private static long rotateLane64(long value, int rotationCount) {
-        return (value << (rotationCount % 64)) | (value >>> (64 - (rotationCount % 64)));
+        // Calculate the effective rotation count within the range [0, 63].
+        int effectiveRotation = rotationCount % 64;
+
+        // Perform the circular left shift (rotation) operation.
+        // Shift left by the effective rotation count, and also shift right by the complement to achieve circular rotation.
+        return (value << effectiveRotation) | (value >>> (64 - effectiveRotation));
     }
+
 
     /**
      * Calculates the floor of the base-2 logarithm of the provided integer.
@@ -166,17 +174,18 @@ public class KeccakProcessor {
      * @return The floor value of the base-2 logarithm
      */
     private static int floorLog(int num) {
+        // Check if the input num is negative.
         if (num < 0) {
-            throw new IllegalArgumentException("Log is undefined for negative numbers.");
+            throw new IllegalArgumentException("Negative numbers are not supported for logarithmic calculations.");
         }
 
-        int exp = -1;
-
+        int exp = -1; // Initialize the exponent to -1.
+        // Continue right-shifting num until it becomes zero.
         while (num > 0) {
-            num = num>>>1;
-            exp++;
+            num = num >>> 1; // Right-shift num by one bit.
+            exp++; // Increment the exponent.
         }
-
+        // Return the floor logarithm base 2 of the input num.
         return exp;
     }
 }
