@@ -136,14 +136,14 @@ public class KeccakProcessor {
     /**
      * Calculates the XOR of two given states.
      *
-     * @param s1 First state
-     * @param s2 Second state
+     * @param stateArray1 First state
+     * @param stateArray2 Second state
      * @return Resultant state after XOR
      */
-    public static long[] xorStates(long[] s1, long[] s2) {
+    public static long[] xorStates(long[] stateArray1, long[] stateArray2) {
         long[] out = new long[25];
-        for (int i = 0; i < s1.length; i++) {
-            out[i] = s1[i] ^ s2[i];
+        for (int i = 0; i < stateArray1.length; i++) {
+            out[i] = stateArray1[i] ^ stateArray2[i];
         }
         return out;
     }
@@ -151,27 +151,32 @@ public class KeccakProcessor {
     /**
      * Rotates the provided 64-bit lane.
      *
-     * @param x 64-bit lane to be rotated
-     * @param y Number of positions to rotate
+     * @param value 64-bit lane to be rotated
+     * @param rotationCount Number of positions to rotate
      * @return Rotated 64-bit lane
      */
-    private static long rotateLane64(long x, int y) {
-        return (x << (y % 64)) | (x >>> (64 - (y % 64)));
+    private static long rotateLane64(long value, int rotationCount) {
+        return (value << (rotationCount % 64)) | (value >>> (64 - (rotationCount % 64)));
     }
 
     /**
      * Calculates the floor of the base-2 logarithm of the provided integer.
      *
-     * @param n The integer for which the logarithm is calculated
+     * @param num The integer for which the logarithm is calculated
      * @return The floor value of the base-2 logarithm
      */
-    private static int floorLog(int n) {
-        if (n < 0) throw new IllegalArgumentException("Log is undefined for negative numbers.");
+    private static int floorLog(int num) {
+        if (num < 0) {
+            throw new IllegalArgumentException("Log is undefined for negative numbers.");
+        }
+
         int exp = -1;
-        while (n > 0) {
-            n = n>>>1;
+
+        while (num > 0) {
+            num = num>>>1;
             exp++;
         }
+
         return exp;
     }
 }

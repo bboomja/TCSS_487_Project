@@ -147,33 +147,33 @@ public class CryptoUtils {
     /**
      * Encodes the provided byte array into another byte representation.
      *
-     * @param S The byte array to be encoded
+     * @param byteArray The byte array to be encoded
      * @return Encoded byte array
      */
-    private static byte[] encodeString(byte[] S) {
-        if (S == null || S.length == 0) {
+    private static byte[] encodeString(byte[] byteArray) {
+        if (byteArray == null || byteArray.length == 0) {
             return leftEncode(BigInteger.ZERO);
         } else {
 
-            return concat(leftEncode(new BigInteger(String.valueOf(S.length << 3))), S);
+            return concat(leftEncode(new BigInteger(String.valueOf(byteArray.length << 3))), byteArray);
         }
     }
 
     /**
      * Performs padding on the provided byte array.
      *
-     * @param X Byte array to be padded
-     * @param w Width of the padding
+     * @param firstArray Byte array to be padded
+     * @param secondArray Width of the padding
      * @return Padded byte array
      */
-    private static byte[] bytePad(byte[] X, int w) {
+    private static byte[] bytePad(byte[] firstArray, int secondArray) {
 
         //validating the condition that w>0
-        assert w > 0;
+        assert secondArray > 0;
 
-        byte[] wEnc = leftEncode(BigInteger.valueOf(w));
+        byte[] wEnc = leftEncode(BigInteger.valueOf(secondArray));
 
-        byte[] z = new byte[w * ((wEnc.length + X.length + w - 1)/w)];
+        byte[] z = new byte[secondArray * ((wEnc.length + firstArray.length + secondArray - 1) / secondArray)];
 
         /*
             Concatenates wEnc and X into z (z = wEnc || X)
@@ -181,10 +181,10 @@ public class CryptoUtils {
         */
         System.arraycopy(wEnc, 0, z, 0, wEnc.length);
         // copies X into z frm z[wEnc.length] till all X copied into z
-        System.arraycopy(X,0,z,wEnc.length, X.length);
+        System.arraycopy(firstArray,0,z,wEnc.length, firstArray.length);
 
 
-        for (int i = wEnc.length + X.length; i < z.length; i++) {
+        for (int i = wEnc.length + firstArray.length; i < z.length; i++) {
             z[i] = (byte) 0;
         }
 
@@ -247,14 +247,14 @@ public class CryptoUtils {
     /**
      * Calculates the XOR of two given byte arrays.
      *
-     * @param b1 First byte array
-     * @param b2 Second byte array
+     * @param firstArray First byte array
+     * @param secondArray Second byte array
      * @return Byte array after XOR operation
      */
-    public static byte[] xorBytes(byte[] b1, byte[] b2) {
-        byte[] out = new byte[b1.length];
-        for (int i = 0; i < b1.length; i++) {
-            out[i] = (byte) (b1[i] ^ b2[i]);
+    public static byte[] xorBytes(byte[] firstArray, byte[] secondArray) {
+        byte[] out = new byte[firstArray.length];
+        for (int i = 0; i < firstArray.length; i++) {
+            out[i] = (byte) (firstArray[i] ^ secondArray[i]);
         }
         return out;
     }
@@ -262,47 +262,31 @@ public class CryptoUtils {
     /**
      * Concatenates two given byte arrays.
      *
-     * @param b1 First byte array
-     * @param b2 Second byte array
+     * @param firstArray First byte array
+     * @param secondArray Second byte array
      * @return Concatenated byte array
      */
-    public static byte[] concat(byte[] b1, byte[] b2) {
-        byte[] z = new byte[b1.length + b2.length];
-        System.arraycopy(b1,0,z,0,b1.length);
-        System.arraycopy(b2,0,z,b1.length,b2.length);
-        return z;
+    public static byte[] concat(byte[] firstArray, byte[] secondArray) {
+        byte[] result = new byte[firstArray.length + secondArray.length];
+        System.arraycopy(firstArray,0,result,0,firstArray.length);
+        System.arraycopy(secondArray,0,result,firstArray.length,secondArray.length);
+        return result;
     }
 
     /**
      * Converts the provided byte array into its hexadecimal string representation.
      *
-     * @param b Byte array to be converted
+     * @param byteArray Byte array to be converted
      * @return Hexadecimal string representation of the byte array
      */
-    public static String bytesToHexString(byte[] b) {
+    public static String bytesToHexString(byte[] byteArray) {
         StringBuilder hex = new StringBuilder();
-        for (int i = 0; i < b.length; i++) {
-            hex.append(String.format("%02X", b[i]));
+        for (int i = 0; i < byteArray.length; i++) {
+            hex.append(String.format("%02X", byteArray[i]));
         }
         return hex.toString();
     }
 
-    /**
-     * Converts the provided hexadecimal string into a byte array.
-     *
-     * @param s Hexadecimal string to be converted
-     * @return Byte array representation of the hexadecimal string
-     */
-    public static byte[] hexStringToBytes(String s) {
-        s = s.replaceAll("\\s", "");
-        byte[] val = new byte[s.length()/2];
-        for (int i = 0; i < val.length; i++) {
-            int index = i * 2;
-            int j = Integer.parseInt(s.substring(index,index + 2), 16);
-            val[i] = (byte) j;
-        }
-        return val;
-    }
     /**
      * Converts the provided state into a byte array.
      *

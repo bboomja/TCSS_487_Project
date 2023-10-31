@@ -5,10 +5,12 @@ import java.util.Scanner;
 /**
  * This class provides a cryptographic operations such as hashing, authentication (MAC), encryption,
  * and decryption using the Keccak cryptographic hash algorithm.
- *
- * This implementation is inspired and adapted from:
+ * This implementation is inspired by:
  * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
  * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
+ *
+ * @author Hyun Jeon
+ * @version 1.0
  */
 public class Main {
     public static void main(String[] args) {
