@@ -34,22 +34,25 @@ public class KeccakProcessor {
      * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
      *
      * @param stateIn The input state
-     * @param bitLen Bit Length
+     * @param blockSize size of block
      * @param rounds Number of rounds
      * @return The permuted state
      */
-    public static long[] keccak(long[] stateIn, int bitLen, int rounds) {
+    public static long[] keccak(long[] stateIn, int blockSize, int rounds) {
         long[] stateOut = stateIn;
-        int l = floorLog(bitLen/25);
-        for (int i = 12 + 2*l - rounds; i < 12 + 2*l; i++) {
-            stateOut = iota(chi(rhoPhi(theta(stateOut))), i); // sec 3.3 FIPS 202
+        int logValue = (int) Math.floor(Math.log(blockSize / 25) / Math.log(2));
+        int roundStart = 12 + 2 * logValue - rounds;
+        int roundEnd = 12 + 2 * logValue;
+
+        for (int round = roundStart; round < roundEnd; round++) {
+            stateOut = iota(chi(rhoPhi(theta(stateOut))), round);
         }
         return stateOut;
     }
 
     /**
      * Performs the theta step of the Keccak algorithm.
-     * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
+     * inspired by:
      * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
      *
      * @param stateIn Input state array of size 25
@@ -76,7 +79,7 @@ public class KeccakProcessor {
 
     /**
      * Performs the rho and phi steps of the Keccak algorithm.
-     * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
+     * inspired by:
      * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
      *
      * @param stateIn Input state array of size 25
@@ -84,7 +87,7 @@ public class KeccakProcessor {
      */
     private static long[] rhoPhi(long[] stateIn) {
         long[] stateOut = new long[25];
-        stateOut[0] = stateIn[0]; // copying first value
+        stateOut[0] = stateIn[0];
         long t = stateIn[1], temp;
         int ind;
         for (int i = 0; i < 24; i++) {
@@ -98,7 +101,7 @@ public class KeccakProcessor {
 
     /**
      * Performs the chi steps of the Keccak algorithm.
-     * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
+     * inspired by:
      * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
      *
      * @param stateIn Input state array of size 25
@@ -117,7 +120,8 @@ public class KeccakProcessor {
 
     /**
      * Applies the round constatnt to the first word of the state.
-     * - https://github.com/NWc0de/KeccakUtils/blob/master/src/crypto/keccak/KCrypt.java
+     * inspired by:
+     * - https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
      *
      * @param stateIn Input state array of size 25
      * @param round The round number
@@ -166,26 +170,4 @@ public class KeccakProcessor {
         return (value << effectiveRotation) | (value >>> (64 - effectiveRotation));
     }
 
-
-    /**
-     * Calculates the floor of the base-2 logarithm of the provided integer.
-     *
-     * @param num The integer for which the logarithm is calculated
-     * @return The floor value of the base-2 logarithm
-     */
-    private static int floorLog(int num) {
-        // Check if the input num is negative.
-        if (num < 0) {
-            throw new IllegalArgumentException("Negative numbers are not supported for logarithmic calculations.");
-        }
-
-        int exp = -1; // Initialize the exponent to -1.
-        // Continue right-shifting num until it becomes zero.
-        while (num > 0) {
-            num = num >>> 1; // Right-shift num by one bit.
-            exp++; // Increment the exponent.
-        }
-        // Return the floor logarithm base 2 of the input num.
-        return exp;
-    }
 }
