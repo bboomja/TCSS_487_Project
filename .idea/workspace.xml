@@ -5,7 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3334c70f-3c0e-451b-94b7-62210fd05f3b" name="Changes" comment="modified KeccakProcessor.java and CryptoUtils.java">
-      <change beforePath="$PROJECT_DIR$/src/CryptoUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/CryptoUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/EllipticCurve.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/EllipticCurvePoint.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Hello.txt.encrypted" beforeDir="false" afterPath="$PROJECT_DIR$/Hello.txt.encrypted" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
