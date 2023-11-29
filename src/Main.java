@@ -1,5 +1,12 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -37,6 +44,18 @@ public class Main {
                     handleDecryptionOption(scanner); // Call a method to handle option 4.
                     break;
 
+                case 5:
+                    keyPair();
+                    break;
+
+                case 6:
+                    handleDataEncryptionOption(scanner);
+                    break;
+
+                case 7:
+                    decryptEC();
+                    break;
+
                 default:
                     System.out.println("Invalid option. Please choose a valid option.");
                     break;
@@ -60,6 +79,9 @@ public class Main {
         System.out.println("2. Compute an authentication tag (MAC) of a given file");
         System.out.println("3. Encrypt a given data file symmetrically");
         System.out.println("4. Decrypt a given symmetric cryptogram");
+        System.out.println("5. Generate an elliptic curve key pair from a passphrase");
+        System.out.println("6. Encrypt a data file under a given elliptic public key");
+        System.out.println("7. Decrypt a data file encrypted with an elliptic public key");
         System.out.println();
         System.out.print("Enter the option number: ");
     }
@@ -175,6 +197,22 @@ public class Main {
         }
     }
 
+    private static void handleDataEncryptionOption(Scanner scanner) {
+        scanner.nextLine();
+
+        System.out.println("Enter the public key file path:");
+        String publicKeyFilePath = scanner.nextLine();
+
+        System.out.println("Enter the data file path:");
+        String dataFilePath = scanner.nextLine();
+
+
+        String outputFilePath = dataFilePath + "_encrypted.txt";
+
+        encryptEC(publicKeyFilePath, dataFilePath, outputFilePath);
+        System.out.println("Encrypted data saved to: " + outputFilePath);
+    }
+
     /**
      * Handle the decryption operation by decrypting an encrypted file using the provided passphrase.
      *
@@ -269,6 +307,155 @@ public class Main {
         return decrypted;
     }
 
+    private static void keyPair() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter your passphrase: ");
+        String passphrase = scanner.nextLine();
+
+        // s = 4 * KMACXOF256(pw, "", 448, "SK") (mod r)
+        byte[] sBytes = CryptoUtils.KMACXOF256(passphrase.getBytes(), "".getBytes(), 448, "SK".getBytes());
+        BigInteger s = new BigInteger(1, sBytes).multiply(BigInteger.valueOf(4)).mod(EllipticCurve.r);
+
+        // V = s * G
+        EllipticCurvePoint G = EllipticCurve.getG();
+        EllipticCurvePoint V = EllipticCurve.exponentiation(G, s);
+
+        // Print
+        System.out.println("Generated Public Key: \n" + V.getX().toString(16) + "\n" + V.getY().toString(16));
+        System.out.println();
+        System.out.println("Generated Private Key: " + s.toString(16));
+        System.out.println();
+
+        // Save the file
+        String currentDirectory = System.getProperty("user.dir");
+        saveToFile("PublicKeyOutput.txt", V.getX().toString(16) + "\n" + V.getY().toString(16));
+        saveToFile("PrivateKeyOutput.txt", s.toString(16));
+        System.out.println();
+
+
+        System.out.println("Public Key saved to: " + currentDirectory + "/PublicKeyOutput.txt");
+        System.out.println("Private Key saved to: " + currentDirectory + "/PrivateKeyOutput.txt");
+    }
+
+    private static void encryptEC(String publicKeyFilePath, String dataFilePath, String outputFilePath) {
+        try {
+            EllipticCurvePoint publicKey = readPublicKeyFromFile(publicKeyFilePath);
+
+            SecureRandom random = new SecureRandom();
+            byte[] kBytes = new byte[56]; // 448 bits
+            random.nextBytes(kBytes);
+            BigInteger k = new BigInteger(1, kBytes).multiply(BigInteger.valueOf(4)).mod(EllipticCurve.r);
+
+            // W = k * V, Z = k * G
+            EllipticCurvePoint W = EllipticCurve.exponentiation(publicKey, k);
+            EllipticCurvePoint G = EllipticCurve.getG();
+            EllipticCurvePoint Z = EllipticCurve.exponentiation(G, k);
+
+            byte[] keka = CryptoUtils.KMACXOF256(W.getX().toByteArray(), "".getBytes(), 2 * 448, "PK".getBytes());
+            byte[] ke = Arrays.copyOfRange(keka, 0, keka.length / 2);
+            byte[] ka = Arrays.copyOfRange(keka, keka.length / 2, keka.length);
+
+            byte[] m = readFileToByteArray(dataFilePath);
+
+            byte[] c = CryptoUtils.KMACXOF256(ke, "".getBytes(), m.length * 8, "PKE".getBytes());
+            byte[] encryptedData = CryptoUtils.xorBytes(m, c);
+            byte[] t = CryptoUtils.KMACXOF256(ka, m, 448, "PKA".getBytes());
+
+            String encryptedDataHexString = bytesToHexString(encryptedData);
+            System.out.println("Encrypted Data (Hex): " + encryptedDataHexString);
+
+            // Writing the file
+            try (java.io.OutputStream os = java.nio.file.Files.newOutputStream(java.nio.file.Paths.get(outputFilePath))) {
+                os.write(Z.getX().toByteArray());
+                os.write(Z.getY().toByteArray());
+                os.write(c);
+                os.write(t);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error in encrypting the data file: " + e.getMessage());
+        }
+    }
+
+    private static void decryptEC() {
+        Scanner userInput = new Scanner(System.in);
+        File inputFile;
+        File outputFile = new File("DecryptedEC.txt");
+        String passphrase;
+
+        inputFile = getUserInputFile(userInput);
+
+        System.out.println("Please enter the passphrase used to encrypt: ");
+        passphrase = userInput.nextLine();
+
+        try {
+            String inputFileContents = fileToString(inputFile);
+            Scanner stringScanner = new Scanner(inputFileContents);
+
+            EllipticCurvePoint Z = new EllipticCurvePoint(new BigInteger(hexStringToBytes(stringScanner.nextLine())),
+                    new BigInteger(hexStringToBytes(stringScanner.nextLine())));
+            byte[] c = hexStringToBytes(stringScanner.nextLine());
+            byte[] t = hexStringToBytes(stringScanner.nextLine());
+
+            BigInteger s = new BigInteger(1, CryptoUtils.KMACXOF256(passphrase.getBytes(), "".getBytes(), 448, "SK".getBytes()))
+                    .multiply(BigInteger.valueOf(4))
+                    .mod(EllipticCurve.r);
+
+            EllipticCurvePoint W = EllipticCurve.exponentiation(Z, s);
+
+            byte[] keka = CryptoUtils.KMACXOF256(W.getX().toByteArray(), "".getBytes(), 2 * 448, "PK".getBytes());
+            byte[] ke = Arrays.copyOfRange(keka, 0, keka.length / 2);
+            byte[] ka = Arrays.copyOfRange(keka, keka.length / 2, keka.length);
+
+            byte[] m = CryptoUtils.xorBytes(CryptoUtils.KMACXOF256(ke, "".getBytes(), c.length * 8, "PKE".getBytes()), c);
+            byte[] tPrime = CryptoUtils.KMACXOF256(ka, m, 448, "PKA".getBytes());
+
+            if (Arrays.equals(t, tPrime)) {
+                java.nio.file.Files.write(outputFile.toPath(), m);
+                System.out.println("Decryption successful. Data saved to: " + outputFile.getPath());
+            } else {
+                System.err.println("Decryption failed: Authentication tag does not match.");
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading the file: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error during decryption: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Asks the user for a file path.
+     * If correctly verified, the method will create a File object from that path.
+     * @param userIn the scanner used when asking the user for the file path.
+     * @return the File object created from the verified path.
+     */
+    public static File getUserInputFile(final Scanner userIn) {
+        File theFile;
+        boolean pathVerify = false;
+        String filePrompt = "Please enter the full path of the file:";
+        do {
+            System.out.println(filePrompt);
+            theFile = new File(userIn.nextLine());
+            if (theFile.exists() && !theFile.isDirectory()) {
+                pathVerify = true;
+            } else {
+                System.out.println("ERROR: File doesn't exist or is a directory. Please try again.");
+            }
+        } while (!pathVerify);
+
+        return theFile;
+    }
+
+    public static String fileToString(final File theFile) {
+        String theString = null;
+        try {
+            theString = new String(Files.readAllBytes(theFile.toPath()), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return theString;
+    }
+
     /**
      * Helper method to read a file's contents into a byte array.
      *
@@ -282,5 +469,56 @@ public class Main {
             System.err.println("Error reading the file: " + e.getMessage());
             return new byte[0];
         }
+    }
+
+    private static void saveToFile(String filename, String content) {
+        try {
+            FileWriter writer = new FileWriter(filename);
+            writer.write(content);
+            writer.close();
+            System.out.println("Saved to " + filename);
+        } catch (IOException e) {
+            System.out.println("An error occurred while writing to " + filename);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Read a public key from a given file and create an EllipticCurvePoint object.
+     *
+     * @param filePath the path to the public key file.
+     * @return an EllipticCurvePoint representing the public key.
+     * @throws IOException if there's an error reading the file.
+     */
+    private static EllipticCurvePoint readPublicKeyFromFile(String filePath) throws IOException {
+        List<String> lines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get(filePath));
+        if (lines.size() < 2) {
+            throw new IOException("Invalid public key file format.");
+        }
+        BigInteger x = new BigInteger(lines.get(0), 16);
+        BigInteger y = new BigInteger(lines.get(1), 16);
+        return new EllipticCurvePoint(x, y);
+    }
+
+    private static String bytesToHexString(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+    private static byte[] hexStringToBytes(String hexString) {
+        int len = hexString.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+                    + Character.digit(hexString.charAt(i + 1), 16));
+        }
+        return data;
     }
 }

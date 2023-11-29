@@ -201,7 +201,7 @@ public class CryptoUtils {
      *
      * @param in The input bytes
      * @param bitLen The desired bit length of the output
-     * @param cap The capacity in bits which remains untouched by the sponge function
+     * @param capacity The capacity in bits which remains untouched by the sponge function
      * @return Output bytes after applying the sponge function
      */
     private static byte[] sponge(byte[] in, int bitLen, int capacity) {

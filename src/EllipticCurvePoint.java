@@ -1,8 +1,8 @@
 import java.math.BigInteger;
 
 public class EllipticCurvePoint {
-    private final BigInteger x;
-    private final BigInteger y;
+    private BigInteger x;
+    private BigInteger y;
 
     // Constructor for a point on the curve
     public EllipticCurvePoint(BigInteger x, BigInteger y) {
@@ -19,5 +19,20 @@ public class EllipticCurvePoint {
         return y;
     }
 
-    // Implement other necessary methods like point negation, etc.
+   public void setX(BigInteger x) {
+        this.x = x;
+   }
+
+   public void setY(BigInteger y) {
+        this.y = y;
+   }
+
+   @Override
+   public String toString() {
+        String s = "";
+        s = s + x.toString() + "\n" + y.toString();
+        return s;
+   }
+
+
 }
